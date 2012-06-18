@@ -1,5 +1,5 @@
 #############################
-Upgrading from 2.1.0 to 3.0.0
+Upgrading from 2.1.1 to 3.0.0
 #############################
 
 .. note:: These upgrade notes are for a version that is yet to be released.
@@ -51,5 +51,5 @@ Step 6: Remove usage of db_pconnect()
 =====================================
 
 As of CodeIgniter 3.0, the db_pconnect() method is just an alias for db_connect(TRUE) and is DEPRECATED.
-It is still usable, but will be removed in a future version, but you're encouraged to change its usage
+It is still usable, but will be removed in a future version and you're encouraged to change its usage
 sooner rather than later. Use db_connect(TRUE) instead.
