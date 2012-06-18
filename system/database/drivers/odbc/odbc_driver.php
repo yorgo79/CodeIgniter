@@ -68,7 +68,26 @@ class CI_DB_odbc_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
-		function_exists('odbc_connect') OR $this->is_supported = FALSE;
+
+		if (function_exists('odbc_connect') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The ODBC PHP extension was not found on this system.';
+
+			// Check for alternatives
+			if (extension_loaded('PDO'))
+			{
+				$error .= ' You might want to use PDO.';
+			}
+
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
 
 		$this->_random_keyword = ' RND('.time().')'; // database specific random keyword
 

@@ -75,7 +75,43 @@ class CI_DB_mysqli_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
-		extension_loaded('mysqli') OR $this->is_supported = FALSE;
+
+		if (extension_loaded('mysqli') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The MySQLi PHP extension was not found on this system.';
+
+			// Check for alternatives
+			$supported = '';
+
+			if (function_exists('mysql_connect'))
+			{
+				$supported = 'MySQL';
+			}
+
+			if (extension_loaded('pdo_mysql'))
+			{
+				$supported = empty($supported)
+						? 'PDO'
+						: $supported.' or PDO';
+			}
+
+			if (function_exists('odbc_connect'))
+			{
+				$supported = empty($supported)
+						? 'ODBC'
+						: str_replace(' or ', ', ', $supported).' or ODBC';
+			}
+
+			empty($supported) OR $error .= ' You might want to use '.$supported.'.';
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
 	}
 
 	// --------------------------------------------------------------------

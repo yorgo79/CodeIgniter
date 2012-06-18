@@ -73,7 +73,34 @@ class CI_DB_pdo_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
-		extension_loaded('PDO') OR $this->is_supported = FALSE;
+
+		if (extension_loaded('PDO') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The PDO PHP extension was not found on this system.';
+
+			// Check for alternatives
+			if (function_exists('odbc_connect'))
+			{
+				$error .= ' You might want to use ODBC.';
+			}
+
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
+
+		$this->_random_keyword = ' RND('.time().')'; // database specific random keyword
+
+		// Legacy support for DSN in the hostname field
+		if (empty($this->dsn))
+		{
+			$this->dsn = $this->hostname;
+		}
 
 		if (preg_match('/([^;]+):/', $this->dsn, $match) && count($match) === 2)
 		{

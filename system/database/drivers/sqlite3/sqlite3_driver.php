@@ -21,7 +21,7 @@
  * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
  * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  * @link		http://codeigniter.com
- * @since		Version 1.0
+ * @since		Version 3.0
  * @filesource
  */
 
@@ -37,7 +37,6 @@
  * @category	Database
  * @author		Andrey Andreev
  * @link		http://codeigniter.com/user_guide/database/
- * @since		Version 3.0
  */
 class CI_DB_sqlite3_driver extends CI_DB {
 
@@ -69,7 +68,43 @@ class CI_DB_sqlite3_driver extends CI_DB {
 	public function __construct($param)
 	{
 		parent::__construct($param);
-		extension_loaded('sqlite3') OR $this->is_supported = FALSE;
+
+		if (extension_loaded('sqlite3') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The SQLite3 PHP extension was not found on this system.';
+
+			// Check for alternatives
+			$supported = '';
+
+			if (function_exists('sqlite_open'))
+			{
+				$supported = 'SQLite';
+			}
+
+			if (extension_loaded('pdo_sqlite'))
+			{
+				$supported = empty($supported)
+						? 'PDO'
+						: $supported.' or PDO';
+			}
+
+			if (function_exists('odbc_connect'))
+			{
+				$supported = empty($supported)
+						? 'ODBC'
+						: str_replace(' or ', ', ', $supported).' or ODBC';
+			}
+
+			empty($supported) OR $error .= ' You might want to use '.$supported.'.';
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
 	}
 
 	// --------------------------------------------------------------------

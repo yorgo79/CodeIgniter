@@ -71,7 +71,43 @@ class CI_DB_mssql_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
-		function_exists('mssql_connect') OR $this->is_supported = FALSE;
+
+		if (function_exists('mssql_connect') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The MSSQL PHP extension was not found on this system.';
+
+			// Check for alternatives
+			$supported = '';
+
+			if (function_exists('sqlsrv_connect'))
+			{
+				$supported = 'SQLSRV';
+			}
+
+			if (extension_loaded('pdo_dblib') OR extension_loaded('pdo_sqlsrv'))
+			{
+				$supported = empty($supported)
+						? 'PDO'
+						: $supported.' or PDO';
+			}
+
+			if (function_exists('odbc_connect'))
+			{
+				$supported = empty($supported)
+						? 'ODBC'
+						: str_replace(' or ', ', ', $supported).' or ODBC';
+			}
+
+			empty($supported) OR $error .= ' You might want to use '.$supported.'.';
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
 
 		if ( ! empty($this->port))
 		{

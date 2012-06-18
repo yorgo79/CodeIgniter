@@ -68,7 +68,43 @@ class CI_DB_sqlite_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
-		function_exists('sqlite_open') OR $this->is_supported = FALSE;
+
+		if (function_exists('sqlite_open') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The SQLite PHP extension was not found on this system.';
+
+			// Check for alternatives
+			$supported = '';
+
+			if (extension_loaded('sqlite3'))
+			{
+				$supported = 'SQLite3';
+			}
+
+			if (extension_loaded('pdo_sqlite'))
+			{
+				$supported = empty($supported)
+						? 'PDO'
+						: $supported.' or PDO';
+			}
+
+			if (function_exists('odbc_connect'))
+			{
+				$supported = empty($supported)
+						? 'ODBC'
+						: str_replace(' or ', ', ', $supported).' or ODBC';
+			}
+
+			empty($supported) OR $error .= ' You might want to use '.$supported.'.';
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
 	}
 
 	// --------------------------------------------------------------------

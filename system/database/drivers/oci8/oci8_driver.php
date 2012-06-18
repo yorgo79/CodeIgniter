@@ -88,7 +88,36 @@ class CI_DB_oci8_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
-		extension_loaded('oci8') OR $this->is_supported = FALSE;
+
+		if (extension_loaded('oci8') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The OCI8 PHP extension was not found on this system.';
+
+			// Check for alternatives
+			$supported = '';
+
+			if (extension_loaded('pdo_oci'))
+			{
+				$supported = 'PDO';
+			}
+
+			if (function_exists('odbc_connect'))
+			{
+				$supported = empty($supported)
+						? 'ODBC'
+						: $supported.' or ODBC';
+			}
+
+			empty($supported) OR $error .= ' You might want to use '.$supported.'.';
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
 
 		$valid_dsns = array(
 					'tns'	=> '/^\(DESCRIPTION=(\(.+\)){2,}\)$/', // TNS

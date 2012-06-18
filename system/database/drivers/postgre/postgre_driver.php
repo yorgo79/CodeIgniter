@@ -66,7 +66,36 @@ class CI_DB_postgre_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
-		function_exists('pg_connect') OR $this->is_supported = FALSE;
+
+		if (function_exists('pg_connect') === FALSE)
+		{
+			$this->is_supported = FALSE;
+
+			$error = 'The PostgreSQL PHP extension was not found on this system.';
+
+			// Check for alternatives
+			$supported = '';
+
+			if (extension_loaded('pdo_pgsql'))
+			{
+				$supported = 'PDO';
+			}
+
+			if (function_exists('odbc_connect'))
+			{
+				$supported = empty($supported)
+						? 'ODBC'
+						: $supported.' or ODBC';
+			}
+
+			empty($supported) OR $error .= ' You might want to use '.$supported.'.';
+			log_message('error', $error);
+
+			if ($this->db_debug === TRUE)
+			{
+				$this->display_error($error, '', TRUE);
+			}
+		}
 
 		if ( ! empty($this->dsn))
 		{
