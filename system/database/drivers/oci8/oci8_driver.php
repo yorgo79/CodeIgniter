@@ -77,9 +77,18 @@ class CI_DB_oci8_driver extends CI_DB {
 	// throw off num_fields later
 	public $limit_used;
 
+	/**
+	 * Constructor
+	 *
+	 * Handles the DSN string and checks if the driver is supported
+	 *
+	 * @param	array
+	 * @return	void
+	 */
 	public function __construct($params)
 	{
 		parent::__construct($params);
+		extension_loaded('oci8') OR $this->is_supported = FALSE;
 
 		$valid_dsns = array(
 					'tns'	=> '/^\(DESCRIPTION=(\(.+\)){2,}\)$/', // TNS

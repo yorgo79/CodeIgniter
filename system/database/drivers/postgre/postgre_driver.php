@@ -59,13 +59,14 @@ class CI_DB_postgre_driver extends CI_DB {
 	/**
 	 * Constructor
 	 *
-	 * Creates a DSN string to be used for db_connect() and db_pconnect()
+	 * Initializes the DSN string and checks if the driver is supported
 	 *
 	 * @return	void
 	 */
 	public function __construct($params)
 	{
 		parent::__construct($params);
+		function_exists('pg_connect') OR $this->is_supported = FALSE;
 
 		if ( ! empty($this->dsn))
 		{

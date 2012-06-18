@@ -60,9 +60,18 @@ class CI_DB_cubrid_driver extends CI_DB {
 	// CUBRID-specific properties
 	public $auto_commit = TRUE;
 
+	/**
+	 * Constructor
+	 *
+	 * Handles the DSN string or port number and checks if the driver is supported
+	 *
+	 * @param	array
+	 * @return	void
+	 */
 	public function __construct($params)
 	{
 		parent::__construct($params);
+		function_exists('cubrid_connect') OR $this->is_supported = FALSE;
 
 		if (preg_match('/^CUBRID:[^:]+(:[0-9][1-9]{0,4})?:[^:]+:[^:]*:[^:]*:(\?.+)?$/', $this->dsn, $matches))
 		{
@@ -77,6 +86,8 @@ class CI_DB_cubrid_driver extends CI_DB {
 			empty($this->port) OR $this->port = 33000;
 		}
 	}
+
+	// --------------------------------------------------------------------
 
 	/**
 	 * Non-persistent database connection

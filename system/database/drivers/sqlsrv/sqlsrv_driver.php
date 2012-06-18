@@ -61,6 +61,22 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	protected $_quoted_identifier = TRUE;
 
 	/**
+	 * Constructor
+	 *
+	 * Checks if the driver is supported
+	 *
+	 * @param	array
+	 * @return	void
+	 */
+	public function __construct($params)
+	{
+		parent::__construct($params);
+		function_exists('sqlsrv_connect') OR $this->is_supported = FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
 	 * Non-persistent database connection
 	 *
 	 * @return	resource

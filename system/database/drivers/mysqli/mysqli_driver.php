@@ -65,6 +65,22 @@ class CI_DB_mysqli_driver extends CI_DB {
 	public $delete_hack = TRUE;
 
 	/**
+	 * Constructor
+	 *
+	 * Checks if the driver is supported
+	 *
+	 * @param	array
+	 * @return	void
+	 */
+	public function __construct($params)
+	{
+		parent::__construct($params);
+		extension_loaded('mysqli') OR $this->is_supported = FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
 	 * Non-persistent database connection
 	 *
 	 * @return	object

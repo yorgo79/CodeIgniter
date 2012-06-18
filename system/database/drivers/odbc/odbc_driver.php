@@ -57,9 +57,18 @@ class CI_DB_odbc_driver extends CI_DB {
 	protected $_count_string = 'SELECT COUNT(*) AS ';
 	protected $_random_keyword;
 
+	/**
+	 * Constructor
+	 *
+	 * Initializes the DSN string and _random_keyword and checks if the driver is supported
+	 *
+	 * @param	array
+	 * @return	void
+	 */
 	public function __construct($params)
 	{
 		parent::__construct($params);
+		function_exists('odbc_connect') OR $this->is_supported = FALSE;
 
 		$this->_random_keyword = ' RND('.time().')'; // database specific random keyword
 
@@ -69,6 +78,8 @@ class CI_DB_odbc_driver extends CI_DB {
 			$this->dsn = $this->hostname;
 		}
 	}
+
+	// --------------------------------------------------------------------
 
 	/**
 	 * Non-persistent database connection

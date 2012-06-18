@@ -61,9 +61,19 @@ class CI_DB_pdo_driver extends CI_DB {
 	public $pdodriver;
 	public $options = array();
 
+	/**
+	 * Constructor
+	 *
+	 * Initializes the DSN string and platform-specific properties and
+	 * checks if the driver is supported.
+	 *
+	 * @param	array
+	 * @return	void
+	 */
 	public function __construct($params)
 	{
 		parent::__construct($params);
+		extension_loaded('PDO') OR $this->is_supported = FALSE;
 
 		if (preg_match('/([^;]+):/', $this->dsn, $match) && count($match) === 2)
 		{
@@ -97,6 +107,8 @@ class CI_DB_pdo_driver extends CI_DB {
 		$this->trans_enabled = FALSE;
 		$this->_random_keyword = ' RND('.time().')'; // database specific random keyword
 	}
+
+	// --------------------------------------------------------------------
 
 	/**
 	 * Connection String
@@ -149,38 +161,38 @@ class CI_DB_pdo_driver extends CI_DB {
 		}
 
 		// Add the database name to the DSN, if needed
-	    if (stripos($this->dsn, 'dbname') === FALSE
-	       && in_array($this->pdodriver, array('4D', 'pgsql', 'mysql', 'firebird', 'sybase', 'mssql', 'dblib', 'cubrid')))
-	    {
-	        $this->dsn .= 'dbname='.$this->database.';';
-	    }
-	    elseif (stripos($this->dsn, 'database') === FALSE && in_array($this->pdodriver, array('ibm', 'sqlsrv')))
-	    {
-	    	if (stripos($this->dsn, 'dsn') === FALSE)
-	    	{
-		        $this->dsn .= 'database='.$this->database.';';
-	    	}
-	    }
-	    elseif ($this->pdodriver === 'sqlite' && $this->dsn === 'sqlite:')
-	    {
-	        if ($this->database !== ':memory')
-	        {
-	            if ( ! file_exists($this->database))
-	            {
-	                show_error('Invalid DB Connection string for PDO SQLite');
-	            }
+		if (stripos($this->dsn, 'dbname') === FALSE
+			&& in_array($this->pdodriver, array('4D', 'pgsql', 'mysql', 'firebird', 'sybase', 'mssql', 'dblib', 'cubrid')))
+		{
+			$this->dsn .= 'dbname='.$this->database.';';
+		}
+		elseif (stripos($this->dsn, 'database') === FALSE && in_array($this->pdodriver, array('ibm', 'sqlsrv')))
+		{
+			if (stripos($this->dsn, 'dsn') === FALSE)
+			{
+				$this->dsn .= 'database='.$this->database.';';
+			}
+		}
+		elseif ($this->pdodriver === 'sqlite' && $this->dsn === 'sqlite:')
+		{
+			if ($this->database !== ':memory')
+			{
+				if ( ! file_exists($this->database))
+				{
+					show_error('Invalid DB Connection string for PDO SQLite');
+				}
 
-	            $this->dsn .= (strpos($this->database, DIRECTORY_SEPARATOR) !== 0) ? DIRECTORY_SEPARATOR : '';
-	        }
+				$this->dsn .= (strpos($this->database, DIRECTORY_SEPARATOR) !== 0) ? DIRECTORY_SEPARATOR : '';
+			}
 
-	        $this->dsn .= $this->database;
-	    }
+			$this->dsn .= $this->database;
+		}
 
-	    // Add charset to the DSN, if needed
-	    if ( ! empty($this->char_set) && in_array($this->pdodriver, array('4D', 'mysql', 'sybase', 'mssql', 'dblib', 'oci')))
-	    {
-	        $this->dsn .= 'charset='.$this->char_set.';';
-	    }
+		// Add charset to the DSN, if needed
+		if ( ! empty($this->char_set) && in_array($this->pdodriver, array('4D', 'mysql', 'sybase', 'mssql', 'dblib', 'oci')))
+		{
+			$this->dsn .= 'charset='.$this->char_set.';';
+		}
 	}
 
 	// --------------------------------------------------------------------

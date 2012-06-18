@@ -63,6 +63,7 @@ abstract class CI_DB_driver {
 	public $queries			= array();
 	public $query_times		= array();
 	public $data_cache		= array();
+	public $is_supported		= TRUE;
 
 	public $trans_enabled		= TRUE;
 	public $trans_strict		= TRUE;

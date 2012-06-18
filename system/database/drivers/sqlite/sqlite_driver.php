@@ -58,6 +58,22 @@ class CI_DB_sqlite_driver extends CI_DB {
 	protected $_random_keyword = ' Random()'; // database specific random keyword
 
 	/**
+	 * Constructor
+	 *
+	 * Checks if the driver is supported
+	 *
+	 * @param	array
+	 * @return	void
+	 */
+	public function __construct($params)
+	{
+		parent::__construct($params);
+		function_exists('sqlite_open') OR $this->is_supported = FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
 	 * Non-persistent database connection
 	 *
 	 * @return	resource

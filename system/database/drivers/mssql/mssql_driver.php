@@ -63,7 +63,7 @@ class CI_DB_mssql_driver extends CI_DB {
 	/*
 	 * Constructor
 	 *
-	 * Appends the port number to the hostname, if needed.
+	 * Handles custom port numbers and checks if the driver is supported
 	 *
 	 * @param	array
 	 * @return	void
@@ -71,6 +71,7 @@ class CI_DB_mssql_driver extends CI_DB {
 	public function __construct($params)
 	{
 		parent::__construct($params);
+		function_exists('mssql_connect') OR $this->is_supported = FALSE;
 
 		if ( ! empty($this->port))
 		{

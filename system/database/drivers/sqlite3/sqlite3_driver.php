@@ -59,6 +59,22 @@ class CI_DB_sqlite3_driver extends CI_DB {
 	protected $_random_keyword = ' RANDOM()';
 
 	/**
+	 * Constructor
+	 *
+	 * Checks if the driver is supported
+	 *
+	 * @param	array
+	 * @return	void
+	 */
+	public function __construct($param)
+	{
+		parent::__construct($param);
+		extension_loaded('sqlite3') OR $this->is_supported = FALSE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
 	 * Non-persistent database connection
 	 *
 	 * @return	object	type SQLite3
