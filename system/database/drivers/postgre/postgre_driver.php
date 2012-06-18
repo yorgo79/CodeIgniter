@@ -128,6 +128,11 @@ class CI_DB_postgre_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		return ($persistent === TRUE)
 			? @pg_pconnect($this->dsn)
 			: @pg_connect($this->dsn);

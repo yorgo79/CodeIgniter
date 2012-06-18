@@ -88,6 +88,11 @@ class CI_DB_mysqli_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		// Persistent connection support was added in PHP 5.3.0
 		$hostname = ($persistent === TRUE && is_php('5.3'))
 				? 'p:'.$this->hostname

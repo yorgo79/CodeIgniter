@@ -82,7 +82,11 @@ class CI_DB_sqlite3_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
-		if ($persistent === TRUE)
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+		elseif ($persistent === TRUE)
 		{
 			log_message('debug', "SQLite3 doesn't support persistent connections");
 		}

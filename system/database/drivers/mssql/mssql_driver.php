@@ -89,6 +89,11 @@ class CI_DB_mssql_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		$conn_id = ($persistent)
 				? @mssql_pconnect($this->hostname, $this->username, $this->password)
 				: @mssql_connect($this->hostname, $this->username, $this->password);

@@ -175,6 +175,11 @@ class CI_DB_oci8_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		$function = ($persistent === TRUE) ? 'oci_pconnect' : 'oci_connect';
 
 		return ( ! empty($this->char_set))

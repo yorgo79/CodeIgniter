@@ -93,6 +93,11 @@ class CI_DB_mysql_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		return ($persistent === TRUE)
 			? @mysql_pconnect($this->hostname, $this->username, $this->password)
 			: @mysql_connect($this->hostname, $this->username, $this->password, TRUE);

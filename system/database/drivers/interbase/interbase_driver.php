@@ -84,6 +84,11 @@ class CI_DB_interbase_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		return ($persistent === TRUE)
 			? @ibase_pconnect($this->hostname.':'.$this->database, $this->username, $this->password, $this->char_set)
 			: @ibase_connect($this->hostname.':'.$this->database, $this->username, $this->password, $this->char_set);

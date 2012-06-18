@@ -81,6 +81,11 @@ class CI_DB_sqlite_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		$conn_id = ($persistent === TRUE)
 				? @sqlite_popen($this->database, FILE_WRITE_MODE, $error)
 				: @sqlite_open($this->database, FILE_WRITE_MODE, $error);

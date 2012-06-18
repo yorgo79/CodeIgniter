@@ -205,8 +205,16 @@ class CI_DB_pdo_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+		elseif ($persistent === TRUE)
+		{
+			$this->options[PDO::ATTR_PERSISTENT] = TRUE;
+		}
+
 		$this->options[PDO::ATTR_ERRMODE] = PDO::ERRMODE_SILENT;
-		$persistent === FALSE OR $this->options[PDO::ATTR_PERSISTENT] = TRUE;
 
 		/* Prior to PHP 5.3.6, even if the charset was supplied in the DSN
 		 * on connect - it was ignored. This is a work-around for the issue.

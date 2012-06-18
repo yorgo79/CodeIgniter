@@ -89,6 +89,11 @@ class CI_DB_odbc_driver extends CI_DB {
 	 */
 	public function db_connect($persistent = FALSE)
 	{
+		if ($this->is_supported === FALSE)
+		{
+			return FALSE;
+		}
+
 		return ($persistent === TRUE)
 			? @odbc_pconnect($this->dsn, $this->username, $this->password)
 			: @odbc_connect($this->dsn, $this->username, $this->password);
