@@ -83,26 +83,19 @@ class CI_DB_mysql_driver extends CI_DB {
 		}
 	}
 
-	/**
-	 * Non-persistent database connection
-	 *
-	 * @return	resource
-	 */
-	public function db_connect()
-	{
-		return @mysql_connect($this->hostname, $this->username, $this->password, TRUE);
-	}
-
 	// --------------------------------------------------------------------
 
 	/**
-	 * Persistent database connection
+	 * Create database connection
 	 *
+	 * @param	bool
 	 * @return	resource
 	 */
-	public function db_pconnect()
+	public function db_connect($persistent = FALSE)
 	{
-		return @mysql_pconnect($this->hostname, $this->username, $this->password);
+		return ($persistent === TRUE)
+			? @mysql_pconnect($this->hostname, $this->username, $this->password)
+			: @mysql_connect($this->hostname, $this->username, $this->password, TRUE);
 	}
 
 	// --------------------------------------------------------------------

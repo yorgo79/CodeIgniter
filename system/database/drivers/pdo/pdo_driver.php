@@ -198,36 +198,12 @@ class CI_DB_pdo_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Non-persistent database connection
-	 *
-	 * @return	object
-	 */
-	public function db_connect()
-	{
-		return $this->_pdo_connect();
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Persistent database connection
-	 *
-	 * @return	object
-	 */
-	public function db_pconnect()
-	{
-		return $this->_pdo_connect(TRUE);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * PDO connection
+	 * Create database connection
 	 *
 	 * @param	bool
 	 * @return	object
 	 */
-	protected function _pdo_connect($persistent = FALSE)
+	public function db_connect($persistent = FALSE)
 	{
 		$this->options[PDO::ATTR_ERRMODE] = PDO::ERRMODE_SILENT;
 		$persistent === FALSE OR $this->options[PDO::ATTR_PERSISTENT] = TRUE;

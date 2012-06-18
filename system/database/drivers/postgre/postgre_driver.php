@@ -121,25 +121,16 @@ class CI_DB_postgre_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Non-persistent database connection
+	 * Create database connection
 	 *
+	 * @param	bool
 	 * @return	resource
 	 */
-	public function db_connect()
+	public function db_connect($persistent = FALSE)
 	{
-		return @pg_connect($this->dsn);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Persistent database connection
-	 *
-	 * @return	resource
-	 */
-	public function db_pconnect()
-	{
-		return @pg_pconnect($this->dsn);
+		return ($persistent === TRUE)
+			? @pg_pconnect($this->dsn)
+			: @pg_connect($this->dsn);
 	}
 
 	// --------------------------------------------------------------------

@@ -74,37 +74,18 @@ class CI_DB_sqlite_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Non-persistent database connection
+	 * Create database connection
 	 *
+	 * @param	bool
 	 * @return	resource
 	 */
-	public function db_connect()
+	public function db_connect($persistent = FALSE)
 	{
-		if ( ! $conn_id = @sqlite_open($this->database, FILE_WRITE_MODE, $error))
-		{
-			log_message('error', $error);
+		$conn_id = ($persistent === TRUE)
+				? @sqlite_popen($this->database, FILE_WRITE_MODE, $error)
+				: @sqlite_open($this->database, FILE_WRITE_MODE, $error);
 
-			if ($this->db_debug)
-			{
-				$this->display_error($error, '', TRUE);
-			}
-
-			return FALSE;
-		}
-
-		return $conn_id;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Persistent database connection
-	 *
-	 * @return	resource
-	 */
-	public function db_pconnect()
-	{
-		if ( ! $conn_id = @sqlite_popen($this->database, FILE_WRITE_MODE, $error))
+		if ( ! $conn_id)
 		{
 			log_message('error', $error);
 

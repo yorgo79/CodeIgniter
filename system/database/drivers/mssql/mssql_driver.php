@@ -82,36 +82,12 @@ class CI_DB_mssql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Non-persistent database connection
-	 *
-	 * @return	resource
-	 */
-	public function db_connect()
-	{
-		return $this->_mssql_connect();
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Persistent database connection
-	 *
-	 * @return	resource
-	 */
-	public function db_pconnect()
-	{
-		return $this->_mssql_connect(TRUE);
-	}
-
-	// --------------------------------------------------------------------
-
-	/*
-	 * MSSQL Connect
+	 * Create database connection
 	 *
 	 * @param	bool
 	 * @return	resource
 	 */
-	protected function _mssql_connect($persistent = FALSE)
+	public function db_connect($persistent = FALSE)
 	{
 		$conn_id = ($persistent)
 				? @mssql_pconnect($this->hostname, $this->username, $this->password)

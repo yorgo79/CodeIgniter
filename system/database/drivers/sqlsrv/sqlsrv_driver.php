@@ -77,8 +77,9 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Non-persistent database connection
+	 * Create database connection
 	 *
+	 * @param	bool
 	 * @return	resource
 	 */
 	public function db_connect($pooling = FALSE)
@@ -111,18 +112,6 @@ class CI_DB_sqlsrv_driver extends CI_DB {
 		$this->_escape_char = ($this->_quoted_identifier) ? '"' : array('[', ']');
 
 		return $conn_id;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Persistent database connection
-	 *
-	 * @return	resource
-	 */
-	public function db_pconnect()
-	{
-		return $this->db_connect(TRUE);
 	}
 
 	// --------------------------------------------------------------------

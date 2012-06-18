@@ -114,7 +114,7 @@ abstract class CI_DB_driver {
 		// ----------------------------------------------------------------
 
 		// Connect to the database and set the connection ID
-		$this->conn_id = ($this->pconnect === FALSE) ? $this->db_connect() : $this->db_pconnect();
+		$this->conn_id = $this->db_connect($this->pconnect);
 
 		// No connection resource? Check if there is a failover else throw an error
 		if ( ! $this->conn_id)
@@ -132,7 +132,7 @@ abstract class CI_DB_driver {
 					}
 
 					// Try to connect
-					$this->conn_id = ($this->pconnect === FALSE) ? $this->db_connect() : $this->db_pconnect();
+					$this->conn_id = $this->db_connect($this->pconnect);
 
 					// If a connection is made break the foreach loop
 					if ($this->conn_id)
@@ -171,6 +171,22 @@ abstract class CI_DB_driver {
 
 		// Now we set the character set and that's all
 		return $this->db_set_charset($this->char_set);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Persistent database connection
+	 *
+	 * As of CodeIgniter 3.0 this method is just an alias for
+	 * db_connect(TRUE) and is DEPRECATED.
+	 *
+	 * @deprecated
+	 * @return	mixed
+	 */
+	public function db_pconnect()
+	{
+		return $this->db_connect(TRUE);
 	}
 
 	// --------------------------------------------------------------------

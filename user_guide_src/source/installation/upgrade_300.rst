@@ -46,3 +46,10 @@ Step 5: Move your errors folder
 ===============================
 
 In version 3.0.0, the errors folder has been moved from _application/errors_ to _application/views/errors_.
+
+Step 6: Remove usage of db_pconnect()
+=====================================
+
+As of CodeIgniter 3.0, the db_pconnect() method is just an alias for db_connect(TRUE) and is DEPRECATED.
+It is still usable, but will be removed in a future version, but you're encouraged to change its usage
+sooner rather than later. Use db_connect(TRUE) instead.

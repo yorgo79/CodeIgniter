@@ -165,30 +165,21 @@ class CI_DB_oci8_driver extends CI_DB {
 		$this->dsn = '';
 	}
 
-	/**
-	 * Non-persistent database connection
-	 *
-	 * @return	resource
-	 */
-	public function db_connect()
-	{
-		return ( ! empty($this->char_set))
-			? @oci_connect($this->username, $this->password, $this->dsn, $this->char_set)
-			: @oci_connect($this->username, $this->password, $this->dsn);
-	}
-
 	// --------------------------------------------------------------------
 
 	/**
-	 * Persistent database connection
+	 * Create database connection
 	 *
+	 * @param	bool
 	 * @return	resource
 	 */
-	public function db_pconnect()
+	public function db_connect($persistent = FALSE)
 	{
+		$function = ($persistent === TRUE) ? 'oci_pconnect' : 'oci_connect';
+
 		return ( ! empty($this->char_set))
-			? @oci_pconnect($this->username, $this->password, $this->dsn, $this->char_set)
-			: @oci_pconnect($this->username, $this->password, $this->dsn);
+			? @$function($this->username, $this->password, $this->dsn, $this->char_set)
+			: @$function($this->username, $this->password, $this->dsn);
 	}
 
 	// --------------------------------------------------------------------

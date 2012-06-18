@@ -81,35 +81,21 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Non-persistent database connection
+	 * Create database connection
 	 *
+	 * @param	bool
 	 * @return	object
 	 */
-	public function db_connect()
-	{
-		return empty($this->port)
-			? @new mysqli($this->hostname, $this->username, $this->password, $this->database)
-			: @new mysqli($this->hostname, $this->username, $this->password, $this->database, $this->port);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Persistent database connection
-	 *
-	 * @return	object
-	 */
-	public function db_pconnect()
+	public function db_connect($persistent = FALSE)
 	{
 		// Persistent connection support was added in PHP 5.3.0
-		if ( ! is_php('5.3'))
-		{
-			return $this->db_connect();
-		}
+		$hostname = ($persistent === TRUE && is_php('5.3'))
+				? 'p:'.$this->hostname
+				: $this->hostname;
 
 		return empty($this->port)
-			? @new mysqli('p:'.$this->hostname, $this->username, $this->password, $this->database)
-			: @new mysqli('p:'.$this->hostname, $this->username, $this->password, $this->database, $this->port);
+			? @new mysqli($hostname, $this->username, $this->password, $this->database)
+			: @new mysqli($hostname, $this->username, $this->password, $this->database, $this->port);
 	}
 
 	// --------------------------------------------------------------------
