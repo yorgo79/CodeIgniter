@@ -21,18 +21,18 @@
  * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
  * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  * @link		http://codeigniter.com
- * @since		Version 2.0.3
+ * @since		Version 2.1.0
  * @filesource
  */
 
 /**
- * SQLSRV Forge Class
+ * PDO DBLIB Forge Class
  *
  * @category	Database
  * @author		EllisLab Dev Team
  * @link		http://codeigniter.com/user_guide/database/
  */
-class CI_DB_sqlsrv_forge extends CI_DB_forge {
+class CI_DB_pdo_dblib_forge extends CI_DB_pdo_forge {
 
 	protected $_create_table_if	= "IF NOT EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nCREATE TABLE";
 	protected $_drop_table_if	= "IF EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nDROP TABLE";
@@ -115,5 +115,5 @@ class CI_DB_sqlsrv_forge extends CI_DB_forge {
 
 }
 
-/* End of file sqlsrv_forge.php */
-/* Location: ./system/database/drivers/sqlsrv/sqlsrv_forge.php */
+/* End of file pdo_dblib_forge.php */
+/* Location: ./system/database/drivers/pdo/subdrivers/pdo_dblib_forge.php */

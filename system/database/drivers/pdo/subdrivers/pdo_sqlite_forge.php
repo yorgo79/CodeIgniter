@@ -2,7 +2,7 @@
 /**
  * CodeIgniter
  *
- * An open source application development framework for PHP 5.2.4 or newer
+ * An open source application development framework for PHP 5.1.6 or newer
  *
  * NOTICE OF LICENSE
  *
@@ -21,22 +21,40 @@
  * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
  * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  * @link		http://codeigniter.com
- * @since		Version 1.0
+ * @since		Version 2.1.0
  * @filesource
  */
 
 /**
- * SQLite Forge Class
+ * PDO SQLite Forge Class
  *
  * @category	Database
  * @author		EllisLab Dev Team
  * @link		http://codeigniter.com/user_guide/database/
  */
-class CI_DB_sqlite_forge extends CI_DB_forge {
+class CI_DB_pdo_sqlite_forge extends CI_DB_pdo_forge {
 
-	protected $_create_table_if	= FALSE;
+	protected $_create_table_if	= 'CREATE TABLE IF NOT EXISTS';
+	protected $_drop_table_if	= 'DROP TABLE IF EXISTS';
 	protected $_unsigned		= FALSE;
 	protected $_null		= 'NULL';
+
+	/**
+	 * Constructor
+	 *
+	 * @return	void
+	 */
+	public function __construct()
+	{
+		parent::__construct();
+
+		if (version_compare($this->db->version(), '3.3', '<'))
+		{
+			$this->_create_table_if = FALSE;
+		}
+	}
+
+	// --------------------------------------------------------------------
 
 	/**
 	 * Create database
@@ -61,20 +79,28 @@ class CI_DB_sqlite_forge extends CI_DB_forge {
 	 */
 	public function drop_database($db_name = '')
 	{
-		if ( ! @file_exists($this->db->database) OR ! @unlink($this->db->database))
+		// In SQLite, a database is dropped when we delete a file
+		if (@file_exists($this->db->database))
 		{
-			return ($this->db->db_debug) ? $this->db->display_error('db_unable_to_drop') : FALSE;
-		}
-		elseif ( ! empty($this->db->data_cache['db_names']))
-		{
-			$key = array_search(strtolower($this->db->database), array_map('strtolower', $this->db->data_cache['db_names']), TRUE);
-			if ($key !== FALSE)
+			// We need to close the pseudo-connection first
+			$this->db->close();
+			if ( ! @unlink($this->db->database))
 			{
-				unset($this->db->data_cache['db_names'][$key]);
+				return $this->db->db_debug ? $this->db->display_error('db_unable_to_drop') : FALSE;
 			}
+			elseif ( ! empty($this->db->data_cache['db_names']))
+			{
+				$key = array_search(strtolower($this->db->database), array_map('strtolower', $this->db->data_cache['db_names']), TRUE);
+				if ($key !== FALSE)
+				{
+					unset($this->db->data_cache['db_names'][$key]);
+				}
+			}
+
+			return TRUE;
 		}
 
-		return TRUE;
+		return $this->db->db_debug ? $this->db->display_error('db_unable_to_drop') : FALSE;
 	}
 
 	// --------------------------------------------------------------------
@@ -176,5 +202,5 @@ class CI_DB_sqlite_forge extends CI_DB_forge {
 
 }
 
-/* End of file sqlite_forge.php */
-/* Location: ./system/database/drivers/sqlite/sqlite_forge.php */
+/* End of file pdo_sqlite_forge.php */
+/* Location: ./system/database/drivers/pdo/subdrivers/pdo_sqlite_forge.php */

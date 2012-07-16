@@ -21,21 +21,19 @@
  * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
  * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  * @link		http://codeigniter.com
- * @since		Version 1.0
+ * @since		Version 2.1.0
  * @filesource
  */
 
 /**
- * ODBC Forge Class
+ * PDO ODBC Forge Class
  *
  * @category	Database
  * @author		EllisLab Dev Team
  * @link		http://codeigniter.com/database/
  */
-class CI_DB_odbc_forge extends CI_DB_forge {
+class CI_DB_pdo_odbc_forge extends CI_DB_pdo_forge {
 
-	protected $_create_table_if	= FALSE;
-	protected $_drop_table_if	= FALSE;
 	protected $_unsigned		= FALSE;
 	protected $_null		= '';
 
@@ -53,5 +51,5 @@ class CI_DB_odbc_forge extends CI_DB_forge {
 
 }
 
-/* End of file odbc_forge.php */
-/* Location: ./system/database/drivers/odbc/odbc_forge.php */
+/* End of file pdo_odbc_forge.php */
+/* Location: ./system/database/drivers/pdo/subdrivers/pdo_odbc_forge.php */

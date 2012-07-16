@@ -21,27 +21,26 @@
  * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
  * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  * @link		http://codeigniter.com
- * @since		Version 2.0.3
+ * @since		Version 2.1.0
  * @filesource
  */
 
 /**
- * SQLSRV Forge Class
+ * PDO IBM DB2 Forge Class
  *
  * @category	Database
  * @author		EllisLab Dev Team
  * @link		http://codeigniter.com/user_guide/database/
  */
-class CI_DB_sqlsrv_forge extends CI_DB_forge {
+class CI_DB_pdo_ibm_forge extends CI_DB_pdo_forge {
 
-	protected $_create_table_if	= "IF NOT EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nCREATE TABLE";
-	protected $_drop_table_if	= "IF EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nDROP TABLE";
+	protected $_rename_table	= 'RENAME TABLE %s TO %s';
 	protected $_unsigned		= array(
-		'TINYINT'	=> 'SMALLINT',
-		'SMALLINT'	=> 'INT',
+		'SMALLINT'	=> 'INTEGER',
 		'INT'		=> 'BIGINT',
-		'REAL'		=> 'FLOAT'
+		'INTEGER'	=> 'BIGINT'
 	);
+	protected $_default		= FALSE;
 
 	/**
 	 * Alter table query
@@ -56,19 +55,12 @@ class CI_DB_sqlsrv_forge extends CI_DB_forge {
 	 */
 	protected function _alter_table($alter_type, $table, $field)
 	{
-		if (in_array($alter_type, array('ADD', 'DROP'), TRUE))
+		if ($alter_type === 'CHANGE')
 		{
-			return parent::_alter_table($alter_type, $table, $field);
+			$alter_type = 'MODIFY';
 		}
 
-		$sql = 'ALTER TABLE '.$this->db->escape_identifiers($table).' ALTER COLUMN ';
-		$sqls = array();
-		for ($i = 0, $c = count($field); $i < $c; $i++)
-		{
-			$sqls[] = $sql.$this->_process_column($field[$i]);
-		}
-
-		return $sqls;
+		return parent::_alter_table($alter_type, $table, $field);
 	}
 
 	// --------------------------------------------------------------------
@@ -85,14 +77,35 @@ class CI_DB_sqlsrv_forge extends CI_DB_forge {
 	{
 		switch (strtoupper($attributes['TYPE']))
 		{
+			case 'TINYINT':
+				$attributes['TYPE'] = 'SMALLINT';
+				$attributes['UNSIGNED'] = FALSE;
+				return;
 			case 'MEDIUMINT':
 				$attributes['TYPE'] = 'INTEGER';
 				$attributes['UNSIGNED'] = FALSE;
 				return;
-			case 'INTEGER':
-				$attributes['TYPE'] = 'INT';
-				return;
 			default: return;
+		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Field attribute UNIQUE
+	 *
+	 * @param	array	&$attributes
+	 * @param	array	&$field
+	 * @return	void
+	 */
+	protected function _attr_unique(&$attributes, &$field)
+	{
+		if ( ! empty($attributes['UNIQUE']) && $attributes['UNIQUE'] === TRUE)
+		{
+			$field['unique'] = ' UNIQUE';
+
+			// UNIQUE must be used with NOT NULL
+			$field['null'] = ' NOT NULL';
 		}
 	}
 
@@ -107,13 +120,10 @@ class CI_DB_sqlsrv_forge extends CI_DB_forge {
 	 */
 	protected function _attr_auto_increment(&$attributes, &$field)
 	{
-		if ( ! empty($attributes['AUTO_INCREMENT']) && $attributes['AUTO_INCREMENT'] === TRUE && stripos($field['type'], 'int') !== FALSE)
-		{
-			$field['auto_increment'] = ' IDENTITY(1,1)';
-		}
+		// Not supported
 	}
 
 }
 
-/* End of file sqlsrv_forge.php */
-/* Location: ./system/database/drivers/sqlsrv/sqlsrv_forge.php */
+/* End of file pdo_ibm_forge.php */
+/* Location: ./system/database/drivers/pdo/subdrivers/pdo_ibm_forge.php */

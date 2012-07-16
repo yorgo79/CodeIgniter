@@ -21,20 +21,22 @@
  * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
  * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  * @link		http://codeigniter.com
- * @since		Version 1.0
+ * @since		Version 2.1.0
  * @filesource
  */
 
 /**
- * MySQL Forge Class
+ * PDO MySQL Forge Class
  *
  * @category	Database
  * @author		EllisLab Dev Team
  * @link		http://codeigniter.com/user_guide/database/
  */
-class CI_DB_mysql_forge extends CI_DB_forge {
+class CI_DB_pdo_mysql_forge extends CI_DB_pdo_forge {
 
 	protected $_create_database	= 'CREATE DATABASE %s CHARACTER SET %s COLLATE %s';
+	protected $_create_table_if	= 'CREATE TABLE IF NOT EXISTS';
+	protected $_drop_table_if	= 'DROP TABLE IF EXISTS';
 	protected $_unsigned		= array(
 		'TINYINT',
 		'SMALLINT',
@@ -163,5 +165,5 @@ class CI_DB_mysql_forge extends CI_DB_forge {
 
 }
 
-/* End of file mysql_forge.php */
-/* Location: ./system/database/drivers/mysql/mysql_forge.php */
+/* End of file pdo_mysql_forge.php */
+/* Location: ./system/database/drivers/pdo/subdrivers/pdo_mysql_forge.php */

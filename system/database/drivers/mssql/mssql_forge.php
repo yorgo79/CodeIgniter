@@ -34,94 +34,14 @@
  */
 class CI_DB_mssql_forge extends CI_DB_forge {
 
-	protected $_drop_table	= 'DROP TABLE %s';
-
-	/**
-	 * Create Table
-	 *
-	 * @param	string	the table name
-	 * @param	array	the fields
-	 * @param	mixed	primary key(s)
-	 * @param	mixed	key(s)
-	 * @param	bool	should 'IF NOT EXISTS' be added to the SQL
-	 * @return	string
-	 */
-	protected function _create_table($table, $fields, $primary_keys, $keys, $if_not_exists)
-	{
-		$sql = ($if_not_exists === TRUE)
-			? "IF NOT EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'".$table."') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\n"
-			: '';
-
-		$sql .= 'CREATE TABLE '.$this->db->escape_identifiers($table).' (';
-
-		$current_field_count = 0;
-		foreach ($fields as $field => $attributes)
-		{
-			// Numeric field names aren't allowed in databases, so if the key is
-			// numeric, we know it was assigned by PHP and the developer manually
-			// entered the field information, so we'll simply add it to the list
-			if (is_numeric($field))
-			{
-				$sql .= "\n\t".$attributes;
-			}
-			else
-			{
-				$attributes = array_change_key_case($attributes, CASE_UPPER);
-
-				$sql .= "\n\t".$this->db->escape_identifiers($field).' '.$attributes['TYPE'];
-
-				if (stripos($attributes['TYPE'], 'INT') === FALSE && ! empty($attributes['CONSTRAINT']))
-				{
-					$sql .= '('.$attributes['CONSTRAINT'].')';
-				}
-
-				if ( ! empty($attributes['UNSIGNED']) && $attributes['UNSIGNED'] === TRUE)
-				{
-					$sql .= ' UNSIGNED';
-				}
-
-				if (isset($attributes['DEFAULT']))
-				{
-					$sql .= " DEFAULT '".$attributes['DEFAULT']."'";
-				}
-
-				$sql .= ( ! empty($attributes['NULL']) && $attributes['NULL'] === TRUE)
-					? ' NULL' : ' NOT NULL';
-
-				if ( ! empty($attributes['AUTO_INCREMENT']) && $attributes['AUTO_INCREMENT'] === TRUE)
-				{
-					$sql .= ' AUTO_INCREMENT';
-				}
-			}
-
-			// don't add a comma on the end of the last field
-			if (++$current_field_count < count($fields))
-			{
-				$sql .= ',';
-			}
-		}
-
-		if (count($primary_keys) > 0)
-		{
-			$sql .= ",\n\tPRIMARY KEY (".implode(', ', $this->db->escape_identifiers($primary_keys)).')';
-		}
-
-		if (is_array($keys) && count($keys) > 0)
-		{
-			foreach ($keys as $key)
-			{
-				$key = is_array($key)
-					? $this->db->escape_identifiers($key)
-					: array($this->db->escape_identifiers($key));
-
-				$sql .= ",\n\tFOREIGN KEY (".implode(', ', $key).')';
-			}
-		}
-
-		return $sql."\n)";
-	}
-
-	// --------------------------------------------------------------------
+	protected $_create_table_if	= "IF NOT EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nCREATE TABLE";
+	protected $_drop_table_if	= "IF EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nDROP TABLE";
+	protected $_unsigned		= array(
+		'TINYINT'	=> 'SMALLINT',
+		'SMALLINT'	=> 'INT',
+		'INT'		=> 'BIGINT',
+		'REAL'		=> 'FLOAT'
+	);
 
 	/**
 	 * Alter table query
@@ -130,28 +50,67 @@ class CI_DB_mssql_forge extends CI_DB_forge {
 	 * Called by add_column(), drop_column(), and column_alter(),
 	 *
 	 * @param	string	the ALTER type (ADD, DROP, CHANGE)
-	 * @param	string	the column name
 	 * @param	string	the table name
-	 * @param	string	the column definition
-	 * @param	string	the default value
-	 * @param	bool	should 'NOT NULL' be added
-	 * @param	string	the field after which we should add the new field
-	 * @return	string
+	 * @param	mixed	the column definition
+	 * @return	mixed
 	 */
-	protected function _alter_table($alter_type, $table, $column_name, $column_definition = '', $default_value = '', $null = '', $after_field = '')
+	protected function _alter_table($alter_type, $table, $field)
 	{
-		$sql = 'ALTER TABLE '.$this->db->escape_identifiers($table).' '.$alter_type.' '.$this->db->escape_identifiers($column_name);
-
-		// DROP has everything it needs now.
-		if ($alter_type === 'DROP')
+		if (in_array($alter_type, array('ADD', 'DROP'), TRUE))
 		{
-			return $sql;
+			return parent::_alter_table($alter_type, $table, $field);
 		}
 
-		return $sql.' '.$column_definition
-			.($default_value != '' ? ' DEFAULT "'.$default_value.'"' : '')
-			.($null === NULL ? ' NULL' : ' NOT NULL')
-			.($after_field != '' ? ' AFTER '.$this->db->escape_identifiers($after_field) : '');
+		$sql = 'ALTER TABLE '.$this->db->escape_identifiers($table).' ALTER COLUMN ';
+		$sqls = array();
+		for ($i = 0, $c = count($field); $i < $c; $i++)
+		{
+			$sqls[] = $sql.$this->_process_column($field[$i]);
+		}
+
+		return $sqls;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Field attribute TYPE
+	 *
+	 * Performs a data type mapping between different databases.
+	 *
+	 * @param	array	&$attributes
+	 * @return	void
+	 */
+	protected function _attr_type(&$attributes)
+	{
+		switch (strtoupper($attributes['TYPE']))
+		{
+			case 'MEDIUMINT':
+				$attributes['TYPE'] = 'INTEGER';
+				$attributes['UNSIGNED'] = FALSE;
+				return;
+			case 'INTEGER':
+				$attributes['TYPE'] = 'INT';
+				return;
+			default: return;
+		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Field attribute AUTO_INCREMENT
+	 *
+	 * @param	array	&$attributes
+	 * @param	array	&$field
+	 * @return	void
+	 */
+	protected function _attr_auto_increment(&$attributes, &$field)
+	{
+		if ( ! empty($attributes['AUTO_INCREMENT']) && $attributes['AUTO_INCREMENT'] === TRUE && stripos($field['type'], 'int') !== FALSE)
+		{
+			$field['auto_increment'] = ' IDENTITY(1,1)';
+		}
 	}
 
 }

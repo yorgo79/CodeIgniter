@@ -34,6 +34,26 @@
  */
 class CI_DB_sqlite3_forge extends CI_DB_forge {
 
+	protected $_unsigned		= FALSE;
+	protected $_null		= 'NULL';
+
+	/**
+	 * Constructor
+	 *
+	 * @return	void
+	 */
+	public function __construct()
+	{
+		parent::__construct();
+
+		if (version_compare($this->db->version(), '3.3', '<'))
+		{
+			$this->create_table_if = FALSE;
+		}
+	}
+
+	// --------------------------------------------------------------------
+
 	/**
 	 * Create database
 	 *
@@ -84,125 +104,98 @@ class CI_DB_sqlite3_forge extends CI_DB_forge {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Create Table
-	 *
-	 * @param	string	the table name
-	 * @param	array	the fields
-	 * @param	mixed	primary key(s)
-	 * @param	mixed	key(s)
-	 * @param	bool	should 'IF NOT EXISTS' be added to the SQL
-	 * @return	bool
-	 */
-	protected function _create_table($table, $fields, $primary_keys, $keys, $if_not_exists)
-	{
-		$sql = 'CREATE TABLE ';
-
-		// IF NOT EXISTS added to SQLite in 3.3.0
-		if ($if_not_exists === TRUE && version_compare($this->db->version(), '3.3.0', '>=') === TRUE)
-		{
-			$sql .= 'IF NOT EXISTS ';
-		}
-
-		$sql .= $this->db->escape_identifiers($table).' (';
-		$current_field_count = 0;
-
-		foreach ($fields as $field => $attributes)
-		{
-			// Numeric field names aren't allowed in databases, so if the key is
-			// numeric, we know it was assigned by PHP and the developer manually
-			// entered the field information, so we'll simply add it to the list
-			if (is_numeric($field))
-			{
-				$sql .= "\n\t".$attributes;
-			}
-			else
-			{
-				$attributes = array_change_key_case($attributes, CASE_UPPER);
-
-				$sql .= "\n\t".$this->db->escape_identifiers($field).' '.$attributes['TYPE'];
-
-				empty($attributes['CONSTRAINT']) OR $sql .= '('.$attributes['CONSTRAINT'].')';
-
-				if ( ! empty($attributes['UNSIGNED']) && $attributes['UNSIGNED'] === TRUE)
-				{
-					$sql .= ' UNSIGNED';
-				}
-
-				if (isset($attributes['DEFAULT']))
-				{
-					$sql .= " DEFAULT '".$attributes['DEFAULT']."'";
-				}
-
-				$sql .= ( ! empty($attributes['NULL']) && $attributes['NULL'] === TRUE)
-					? ' NULL' : ' NOT NULL';
-
-				if ( ! empty($attributes['AUTO_INCREMENT']) && $attributes['AUTO_INCREMENT'] === TRUE)
-				{
-					$sql .= ' AUTO_INCREMENT';
-				}
-			}
-
-			// don't add a comma on the end of the last field
-			if (++$current_field_count < count($fields))
-			{
-				$sql .= ',';
-			}
-		}
-
-		if (count($primary_keys) > 0)
-		{
-			$sql .= ",\n\tPRIMARY KEY (".implode(', ', $this->db->escape_identifiers($primary_keys)).')';
-		}
-
-		if (is_array($keys) && count($keys) > 0)
-		{
-			foreach ($keys as $key)
-			{
-				$key = is_array($key)
-					? $this->db->escape_identifiers($key)
-					: array($this->db->escape_identifiers($key));
-
-				$sql .= ",\n\tUNIQUE (".implode(', ', $key).')';
-			}
-		}
-
-		return $sql."\n)";
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
 	 * Alter table query
 	 *
 	 * Generates a platform-specific query so that a table can be altered
 	 * Called by add_column(), drop_column(), and column_alter(),
 	 *
+	 * @todo	implement drop_column(), modify_column()
 	 * @param	string	the ALTER type (ADD, DROP, CHANGE)
-	 * @param	string	the column name
 	 * @param	string	the table name
-	 * @param	string	the column definition
-	 * @param	string	the default value
-	 * @param	bool	should 'NOT NULL' be added
-	 * @param	string	the field after which we should add the new field
-	 * @return	string
+	 * @param	mixed	the column definition
+	 * @return	mixed
 	 */
-	protected function _alter_table($alter_type, $table, $column_name, $column_definition = '', $default_value = '', $null = '', $after_field = '')
+	protected function _alter_table($alter_type, $table, $field)
 	{
-		/* SQLite only supports adding new columns and it does
-		 * NOT support the AFTER statement. Each new column will
-		 * be added as the last one in the table.
-		 */
-		if ($alter_type !== 'ADD COLUMN')
+		if ($alter_type === 'DROP' OR $alter_type === 'CHANGE')
 		{
-			// Not supported
+			// drop_column():
+			//	BEGIN TRANSACTION;
+			//	CREATE TEMPORARY TABLE t1_backup(a,b);
+			//	INSERT INTO t1_backup SELECT a,b FROM t1;
+			//	DROP TABLE t1;
+			//	CREATE TABLE t1(a,b);
+			//	INSERT INTO t1 SELECT a,b FROM t1_backup;
+			//	DROP TABLE t1_backup;
+			//	COMMIT;
+
 			return FALSE;
 		}
 
-		return 'ALTER TABLE '.$this->db->escape_identifiers($table).' '.$alter_type.' '.$this->db->escape_identifiers($column_name)
-			.' '.$column_definition
-			.($default_value !== '' ? ' DEFAULT '.$default_value : '')
-			// If NOT NULL is specified, the field must have a DEFAULT value other than NULL
-			.(($null !== NULL && $default_value !== 'NULL') ? ' NOT NULL' : ' NULL');
+		return parent::_alter_table($alter_type, $table, $field);
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Process a single column
+	 *
+	 * @param	array
+	 * @return	string
+	 */
+	protected function _process_column($field)
+	{
+		return $this->db->escape_identifiers($field['name'])
+			.' '.$field['type']
+			.$field['auto_increment']
+			.$field['null']
+			.$field['unique']
+			.$field['default'];
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Field attribute TYPE
+	 *
+	 * Performs a data type mapping between different databases.
+	 *
+	 * @param	array	&$attributes
+	 * @return	void
+	 */
+	protected function _attr_type(&$attributes)
+	{
+		switch (strtoupper($attributes['TYPE']))
+		{
+			case 'ENUM':
+			case 'SET':
+				$attributes['TYPE'] = 'TEXT';
+				return;
+			default: return;
+		}
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Field attribute AUTO_INCREMENT
+	 *
+	 * @param	array	&$attributes
+	 * @param	array	&$field
+	 * @return	void
+	 */
+	protected function _attr_auto_increment(&$attributes, &$field)
+	{
+		if ( ! empty($attributes['AUTO_INCREMENT']) && $attributes['AUTO_INCREMENT'] === TRUE && stripos($field['type'], 'int') !== FALSE)
+		{
+			$field['type'] = 'INTEGER PRIMARY KEY';
+			$field['default'] = '';
+			$field['null'] = '';
+			$field['unique'] = '';
+			$field['auto_increment'] = ' AUTOINCREMENT';
+
+			$this->primary_keys = array();
+		}
 	}
 
 }

@@ -21,27 +21,49 @@
  * @copyright	Copyright (c) 2008 - 2012, EllisLab, Inc. (http://ellislab.com/)
  * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  * @link		http://codeigniter.com
- * @since		Version 2.0.3
+ * @since		Version 2.1.0
  * @filesource
  */
 
 /**
- * SQLSRV Forge Class
+ * PDO PostgreSQL Forge Class
  *
  * @category	Database
  * @author		EllisLab Dev Team
  * @link		http://codeigniter.com/user_guide/database/
  */
-class CI_DB_sqlsrv_forge extends CI_DB_forge {
+class CI_DB_pdo_pgsql_forge extends CI_DB_pdo_forge {
 
-	protected $_create_table_if	= "IF NOT EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nCREATE TABLE";
-	protected $_drop_table_if	= "IF EXISTS (SELECT * FROM sysobjects WHERE ID = object_id(N'%s') AND OBJECTPROPERTY(id, N'IsUserTable') = 1)\nDROP TABLE";
+	protected $_drop_table_if	= 'DROP TABLE IF EXISTS';
 	protected $_unsigned		= array(
-		'TINYINT'	=> 'SMALLINT',
-		'SMALLINT'	=> 'INT',
+		'INT2'		=> 'INTEGER',
+		'SMALLINT'	=> 'INTEGER',
 		'INT'		=> 'BIGINT',
-		'REAL'		=> 'FLOAT'
+		'INT4'		=> 'BIGINT',
+		'INTEGER'	=> 'BIGINT',
+		'INT8'		=> 'NUMERIC',
+		'BIGINT'	=> 'NUMERIC',
+		'REAL'		=> 'DOUBLE PRECISION',
+		'FLOAT'		=> 'DOUBLE PRECISION'
 	);
+	protected $_null		= 'NULL';
+
+	/**
+	 * Constructor
+	 *
+	 * @return	void
+	 */
+	public function __construct()
+	{
+		parent::__construct();
+
+		if (version_compare($this->db->version(), '9.0', '>'))
+		{
+			$this->create_table_if = 'CREATE TABLE IF NOT EXISTS';
+		}
+	}
+
+	// --------------------------------------------------------------------
 
 	/**
 	 * Alter table query
@@ -55,21 +77,47 @@ class CI_DB_sqlsrv_forge extends CI_DB_forge {
 	 * @return	mixed
 	 */
 	protected function _alter_table($alter_type, $table, $field)
-	{
-		if (in_array($alter_type, array('ADD', 'DROP'), TRUE))
+ 	{
+		if (in_array($alter_type, array('DROP', 'ADD'), TRUE))
 		{
 			return parent::_alter_table($alter_type, $table, $field);
 		}
 
-		$sql = 'ALTER TABLE '.$this->db->escape_identifiers($table).' ALTER COLUMN ';
+		$sql = 'ALTER TABLE '.$this->db->escape_identifiers($table);
 		$sqls = array();
-		for ($i = 0, $c = count($field); $i < $c; $i++)
+		for ($i = 0, $c = count($field), $sql .= $alter_type.' '; $i < $c; $i++)
 		{
-			$sqls[] = $sql.$this->_process_column($field[$i]);
+			if ($field[$i]['_literal'] !== FALSE)
+			{
+				return FALSE;
+			}
+
+			if (version_compare($this->db->version(), '8', '>=') && isset($field[$i]['type']))
+			{
+				$sqls[] = $sql.' TYPE '.$field[$i]['type'].$field[$i]['length'];
+			}
+
+			if ( ! empty($field[$i]['default']))
+			{
+				$sqls[] = $sql.' ALTER '.$this->db->escape_identifiers($field[$i]['name'])
+					.' SET '.$field[$i]['default'];
+			}
+
+			if (isset($field[$i]['null']))
+			{
+				$sqls[] = $sql.' ALTER '.$this->db->escape_identifiers($field[$i]['name'])
+					.($field[$i]['null'] === TRUE ? ' DROP NOT NULL' : ' SET NOT NULL');
+			}
+
+			if ( ! empty($field[$i]['new_name']))
+			{
+				$sqls[] = $sql.' RENAME '.$this->db->escape_identifiers($field[$i]['name'])
+					.' TO '.$this->db->escape_identifiers($field[$i]['new_name']);
+			}
 		}
 
 		return $sqls;
-	}
+ 	}
 
 	// --------------------------------------------------------------------
 
@@ -85,12 +133,13 @@ class CI_DB_sqlsrv_forge extends CI_DB_forge {
 	{
 		switch (strtoupper($attributes['TYPE']))
 		{
+			case 'TINYINT':
+				$attributes['TYPE'] = 'SMALLINT';
+				$attributes['UNSIGNED'] = FALSE;
+				return;
 			case 'MEDIUMINT':
 				$attributes['TYPE'] = 'INTEGER';
 				$attributes['UNSIGNED'] = FALSE;
-				return;
-			case 'INTEGER':
-				$attributes['TYPE'] = 'INT';
 				return;
 			default: return;
 		}
@@ -107,13 +156,15 @@ class CI_DB_sqlsrv_forge extends CI_DB_forge {
 	 */
 	protected function _attr_auto_increment(&$attributes, &$field)
 	{
-		if ( ! empty($attributes['AUTO_INCREMENT']) && $attributes['AUTO_INCREMENT'] === TRUE && stripos($field['type'], 'int') !== FALSE)
+		if ( ! empty($attributes['AUTO_INCREMENT']) && $attributes['AUTO_INCREMENT'] === TRUE)
 		{
-			$field['auto_increment'] = ' IDENTITY(1,1)';
+			$field['type'] = ($field['type'] === 'NUMERIC')
+						? 'BIGSERIAL'
+						: 'SERIAL';
 		}
 	}
 
 }
 
-/* End of file sqlsrv_forge.php */
-/* Location: ./system/database/drivers/sqlsrv/sqlsrv_forge.php */
+/* End of file pdo_pgsql_forge.php */
+/* Location: ./system/database/drivers/pdo/subdrivers/pdo_pgsql_forge.php */
