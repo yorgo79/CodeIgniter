@@ -127,8 +127,8 @@ class CI_DB_mysql_driver extends CI_DB {
 		$_flags = ($this->compress === TRUE) ? MYSQL_CLIENT_COMPRESS : 0;
 
 		return ($persistent === TRUE)
-			? @mysql_pconnect($this->hostname, $this->username, $this->password, $flags)
-			: @mysql_connect($this->hostname, $this->username, $this->password, TRUE, $flags);
+			? @mysql_pconnect($this->hostname, $this->username, $this->password, $_flags)
+			: @mysql_connect($this->hostname, $this->username, $this->password, TRUE, $_flags);
 	}
 
 	// --------------------------------------------------------------------

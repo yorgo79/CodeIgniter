@@ -209,9 +209,9 @@ class CI_DB_oci8_driver extends CI_DB {
 
 		$function = ($persistent === TRUE) ? 'oci_pconnect' : 'oci_connect';
 
-		return ( ! empty($this->char_set))
-			? @$function($this->username, $this->password, $this->dsn, $this->char_set)
-			: @$function($this->username, $this->password, $this->dsn);
+		return empty($this->char_set)
+			? @$function($this->username, $this->password, $this->dsn);
+			: @$function($this->username, $this->password, $this->dsn, $this->char_set)
 	}
 
 	// --------------------------------------------------------------------

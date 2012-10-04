@@ -99,8 +99,8 @@ Smiley helper js_insert_smiley()
 :doc:`Smiley Helper <../helpers/smiley_helper>` function ``js_insert_smiley()`` has been deprecated
 since CodeIgniter 1.7.2 and is now removed. You'll need to switch to ``smiley_js()`` instead.
 
-Step 6: Remove usage of db_pconnect()
-=====================================
+Persistent DB connections via db_pconnect()
+===========================================
 
 As of CodeIgniter 3.0, the ``db_pconnect()`` method is just an alias for ``db_connect(TRUE)`` and is
 DEPRECATED.
@@ -116,6 +116,8 @@ Security helper do_hash()
 :doc:`Security Helper <../helpers/security_helper>` function ``do_hash()`` is now just an alias for
 PHP's native ``hash()`` function. It is deprecated and scheduled for removal in CodeIgniter 3.1+.
 
+.. note:: This function is still available, but you're strongly encouraged to remove it's usage sooner
+	rather than later.
 
 File helper read_file()
 =======================
