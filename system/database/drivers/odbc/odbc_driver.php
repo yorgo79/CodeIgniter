@@ -45,16 +45,8 @@ class CI_DB_odbc_driver extends CI_DB {
 	// the character used to excape - not necessary for ODBC
 	protected $_escape_char = '';
 
-	// clause and character used for LIKE escape sequences
 	protected $_like_escape_str = " {escape '%s'} ";
-	protected $_like_escape_chr = '!';
 
-	/**
-	 * The syntax to count rows is slightly different across different
-	 * database engines, so this string appears in each driver and is
-	 * used for the count_all() and count_all_results() functions.
-	 */
-	protected $_count_string = 'SELECT COUNT(*) AS ';
 	protected $_random_keyword;
 
 	/**
@@ -352,23 +344,6 @@ class CI_DB_odbc_driver extends CI_DB {
 	protected function _truncate($table)
 	{
 		return 'DELETE FROM '.$table;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Limit string
-	 *
-	 * Generates a platform-specific LIMIT clause
-	 *
-	 * @param	string	the sql query string
-	 * @param	int	the number of rows to limit the query to
-	 * @param	int	the offset value
-	 * @return	string
-	 */
-	protected function _limit($sql, $limit, $offset)
-	{
-		return $sql.' LIMIT '.($offset == 0 ? '' : $offset.', ').$limit;
 	}
 
 	// --------------------------------------------------------------------

@@ -45,16 +45,6 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// The character used for escaping
 	protected $_escape_char = '`';
 
-	// clause and character used for LIKE escape sequences - not used in MySQL
-	protected $_like_escape_str = '';
-	protected $_like_escape_chr = '\\';
-
-	/**
-	 * The syntax to count rows is slightly different across different
-	 * database engines, so this string appears in each driver and is
-	 * used for the count_all() and count_all_results() functions.
-	 */
-	protected $_count_string = 'SELECT COUNT(*) AS ';
 	protected $_random_keyword = ' RAND()'; // database specific random keyword
 
 	/**
@@ -112,6 +102,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 				$this->display_error($error, '', TRUE);
 			}
 		}
+
 	}
 
 	// --------------------------------------------------------------------
@@ -134,9 +125,18 @@ class CI_DB_mysqli_driver extends CI_DB {
 				? 'p:'.$this->hostname
 				: $this->hostname;
 
-		return empty($this->port)
-			? @new mysqli($hostname, $this->username, $this->password, $this->database)
-			: @new mysqli($hostname, $this->username, $this->password, $this->database, $this->port);
+		$port = empty($this->port) ? NULL : $this->port;
+
+		// Use MySQL client compression?
+		if ($this->compress === TRUE)
+		{
+			$mysqli = mysqli_init();
+			$mysqli->real_connect($hostname, $this->username, $this->password, $this->database, $port, NULL, MYSQLI_CLIENT_COMPRESS);
+
+			return $mysqli;
+		}
+
+		return @new mysqli($hostname, $this->username, $this->password, $this->database, $port);
 	}
 
 	// --------------------------------------------------------------------
@@ -378,7 +378,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	 */
 	protected function _list_tables($prefix_limit = FALSE)
 	{
-		$sql = 'SHOW TABLES FROM '.$this->_escape_char.$this->database.$this->_escape_char;
+		$sql = 'SHOW TABLES FROM '.$this->escape_identifiers($this->database);
 
 		if ($prefix_limit !== FALSE && $this->dbprefix !== '')
 		{
@@ -493,24 +493,6 @@ class CI_DB_mysqli_driver extends CI_DB {
 		return 'UPDATE '.$table.' SET '.substr($cases, 0, -2)
 			.' WHERE '.(($where !== '' && count($where) > 0) ? implode(' ', $where).' AND ' : '')
 			.$index.' IN('.implode(',', $ids).')';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Limit string
-	 *
-	 * Generates a platform-specific LIMIT clause
-	 *
-	 * @param	string	the sql query string
-	 * @param	int	the number of rows to limit the query to
-	 * @param	int	the offset value
-	 * @return	string
-	 */
-	protected function _limit($sql, $limit, $offset)
-	{
-		return $sql.' LIMIT '.$limit
-			.($offset > 0 ? ' OFFSET '.$offset : '');
 	}
 
 	// --------------------------------------------------------------------

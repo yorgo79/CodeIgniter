@@ -45,16 +45,6 @@ class CI_DB_mysql_driver extends CI_DB {
 	// The character used for escaping
 	protected $_escape_char = '`';
 
-	// clause and character used for LIKE escape sequences - not used in MySQL
-	protected $_like_escape_str = '';
-	protected $_like_escape_chr = '\\';
-
-	/**
-	 * The syntax to count rows is slightly different across different
-	 * database engines, so this string appears in each driver and is
-	 * used for the count_all() and count_all_results() functions.
-	 */
-	protected $_count_string = 'SELECT COUNT(*) AS ';
 	protected $_random_keyword = ' RAND()'; // database specific random keyword
 
 	/**
@@ -134,9 +124,11 @@ class CI_DB_mysql_driver extends CI_DB {
 			return FALSE;
 		}
 
+		$_flags = ($this->compress === TRUE) ? MYSQL_CLIENT_COMPRESS : 0;
+
 		return ($persistent === TRUE)
-			? @mysql_pconnect($this->hostname, $this->username, $this->password)
-			: @mysql_connect($this->hostname, $this->username, $this->password, TRUE);
+			? @mysql_pconnect($this->hostname, $this->username, $this->password, $flags)
+			: @mysql_connect($this->hostname, $this->username, $this->password, TRUE, $flags);
 	}
 
 	// --------------------------------------------------------------------
@@ -378,7 +370,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	 */
 	protected function _list_tables($prefix_limit = FALSE)
 	{
-		$sql = 'SHOW TABLES FROM '.$this->_escape_char.$this->database.$this->_escape_char;
+		$sql = 'SHOW TABLES FROM '.$this->escape_identifiers($this->database);
 
 		if ($prefix_limit !== FALSE && $this->dbprefix !== '')
 		{
@@ -398,7 +390,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	 * @param	string	the table name
 	 * @return	string
 	 */
-	public function _list_columns($table = '')
+	protected function _list_columns($table = '')
 	{
 		return 'SHOW COLUMNS FROM '.$this->protect_identifiers($table, TRUE, NULL, FALSE);
 	}
@@ -491,23 +483,6 @@ class CI_DB_mysql_driver extends CI_DB {
 		return 'UPDATE '.$table.' SET '.substr($cases, 0, -2)
 			.' WHERE '.(($where !== '' && count($where) > 0) ? implode(' ', $where).' AND ' : '')
 			.$index.' IN('.implode(',', $ids).')';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Limit string
-	 *
-	 * Generates a platform-specific LIMIT clause
-	 *
-	 * @param	string	the sql query string
-	 * @param	int	the number of rows to limit the query to
-	 * @param	int	the offset value
-	 * @return	string
-	 */
-	protected function _limit($sql, $limit, $offset)
-	{
-		return $sql.' LIMIT '.($offset == 0 ? '' : $offset.', ').$limit;
 	}
 
 	// --------------------------------------------------------------------
