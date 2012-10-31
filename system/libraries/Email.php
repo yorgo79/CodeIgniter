@@ -771,7 +771,7 @@ class CI_Email {
 		}
 
 		// Reduce multiple spaces
-		$str = preg_replace('| +|', ' ', $str);
+		$body = preg_replace('| +|', ' ', $body);
 
 		return ($this->wordwrap)
 			? $this->word_wrap($body, 76)
